@@ -1,0 +1,35 @@
+# IGV Report Generator Configuration
+# Usage: python generate_reports.py config.yaml
+
+# Global settings (can be overridden per case)
+genome: hg38
+flanking: 1000
+output_dir: reports/
+
+cases:
+  - name: KiGS20
+    vcf: input_varinet_files/case_KiGS20_snv.vcf.gz
+    bam:
+      - /path/to/KiGS20_sorted_md.bam    # <-- UPDATE with actual BAM path
+    regions:
+      - chr9:96254800-96255000            # HSD17B3 comp-het (9:96254864 T>A splice + 9:96254906 C>T missense)
+    info_columns:
+      - GENE
+    sample_columns:
+      - DP
+      - GQ
+    title: "KiGS20 - HSD17B3 Comp-Het"
+
+  # Add more cases below:
+  # - name: another_case
+  #   vcf: input_varinet_files/another_case.vcf.gz
+  #   bam:
+  #     - /path/to/another_sample.bam
+  #   regions:
+  #     - chr1:155660800-155660900
+  #   info_columns:
+  #     - GENE
+  #   sample_columns:
+  #     - DP
+  #     - GQ
+  #   title: "Another Case - Gene Name"
