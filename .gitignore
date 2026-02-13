@@ -121,3 +121,7 @@ venv.bak/
 /test/data/variants/hg38.fa.fai
 /test/data/variants/hg38.fa
 /benchmarks/
+
+
+/input_data/
+/output_data/
