@@ -159,4 +159,111 @@ create_datauri --region chr5:474,969-475,009 test/data/variants/recalibrated.bam
 create_datauri --region chr5:474,969-475,009 https://1000genomes.s3.amazonaws.com/phase3/data/NA12878/alignment/NA12878.mapped.ILLUMINA.bwa.CEU.low_coverage.20121211.bam
 ```
 
+## Config-Driven Batch Report Generator
+
+For reviewing specific variants across multiple cases, a config-driven wrapper script is provided. Instead of manually subsetting VCFs and running commands, define everything in a single YAML file and generate all reports at once.
+
+### Prerequisites
+
+In addition to the standard igv-reports dependencies:
+- [bcftools](http://www.htslib.org/) and [tabix](http://www.htslib.org/) (htslib) must be in your `$PATH`
+
+### Usage
+
+```bash
+python generate_reports.py config.yaml
+```
+
+### Configuration
+
+Edit `config.yaml` to define your cases:
+
+```yaml
+# Global settings (can be overridden per case)
+genome: hg38
+flanking: 1000
+output_dir: reports/
+
+cases:
+  - name: KiGS20
+    vcf: input_varinet_files/case_KiGS20_snv.vcf.gz
+    bam:
+      - /path/to/KiGS20_sorted_md.bam
+    regions:
+      - chr9:96254800-96255000    # HSD17B3 comp-het variants
+    info_columns:
+      - GENE
+    sample_columns:
+      - DP
+      - GQ
+    title: "KiGS20 - HSD17B3 Comp-Het"
+```
+
+### Required fields per case
+
+| Field     | Description                                       |
+|-----------|---------------------------------------------------|
+| `name`    | Case identifier (used for output directory/files) |
+| `vcf`     | Path to the indexed VCF file (`.vcf.gz` + `.tbi`) |
+| `regions` | List of regions in `chr:start-end` format         |
+
+### Optional fields per case
+
+| Field                    | Description                             | Default        |
+|--------------------------|-----------------------------------------|----------------|
+| `bam`                    | List of BAM/CRAM file paths             | none           |
+| `genome`                 | igv.js genome ID                        | global setting |
+| `fasta`                  | Indexed FASTA reference                 | none           |
+| `flanking`               | Flanking bp on each side of variant     | `1000`         |
+| `info_columns`           | VCF INFO fields to display              | none           |
+| `sample_columns`         | VCF FORMAT fields to display            | none           |
+| `samples`                | Specific sample names                   | none           |
+| `title`                  | Report HTML title                       | case `name`    |
+| `header`                 | Path to HTML header snippet             | none           |
+| `footer`                 | Path to HTML footer snippet             | none           |
+| `track_config`           | igv.js track config JSON file(s)        | none           |
+| `sort`                   | Alignment sort (BASE, STRAND, etc.)     | none           |
+| `exclude_flags`          | SAMtools exclude flags                  | `1536`         |
+| `tabulator`              | Enable tabulator table (`true`/`false`) | `false`        |
+| `filter_config`          | YAML filter config for tabulator        | none           |
+
+### Output
+
+For each case, the script creates:
+
+```
+reports/
+  KiGS20/
+    KiGS20_subset.vcf.gz       # Subsetted VCF
+    KiGS20_subset.vcf.gz.tbi   # Tabix index
+    KiGS20_report.html          # IGV HTML report (open in browser)
+```
+
+### Example
+
+Given two compound-heterozygous variants in HSD17B3:
+- `chr9:96254864` T>A (splice region)
+- `chr9:96254906` C>T (missense, R80Q)
+
+```yaml
+cases:
+  - name: KiGS20
+    vcf: input_varinet_files/case_KiGS20_snv.vcf.gz
+    bam:
+      - /data/alignments/KiGS20_sorted_md.bam
+    regions:
+      - chr9:96254800-96255000
+    info_columns:
+      - GENE
+    sample_columns:
+      - DP
+      - GQ
+    title: "KiGS20 - HSD17B3 Comp-Het"
+```
+
+```bash
+python generate_reports.py config.yaml
+# Open reports/KiGS20/KiGS20_report.html in a browser
+```
+
 ## [_Release Notes_](https://github.com/igvteam/igv-reports/releases)
